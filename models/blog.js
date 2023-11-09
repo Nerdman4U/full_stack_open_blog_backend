@@ -1,6 +1,7 @@
+const config = require('../config')
 const mongoose = require('mongoose')
 
-const password = process.env.MONGODB_PASSWORD
+const password = config.MONGODB_PASSWORD
 
 const url = `mongodb+srv://jonitoyryla2:${password}@yonisthebest.aguxysm.mongodb.net/blogApp?retryWrites=true&w=majority`
 mongoose.set('strictQuery', false)
