@@ -29,10 +29,28 @@ const mostBlogs = (blogs) => {
   return { name: name, blogs: most }
 }
 
+const mostLikes = (blogs) => {
+  if (Object.keys(blogs).length < 1) return {}
+  const result = lodash.groupBy(blogs, (blog) => { return blog.author })
+
+  let final = {}
+  Object.keys(result).map((name) => {
+    final[name] = result[name].reduce((sum,item) => {
+      return sum + item.likes
+    },0)
+  })
+  const most = Math.max(...lodash.values(final))
+  const name = lodash.findKey(final, (obj) => {
+    return obj === most
+  })
+  return { name: name, likes: most }
+}
+
 
 module.exports = {
   dummy,
   totalLikes,
   favouriteBlog,
-  mostBlogs
+  mostBlogs,
+  mostLikes
 }

@@ -65,3 +65,15 @@ describe('Most blogs', () => {
 
 })
 
+describe('Most likes', () => {
+  test('It returns which has most likes', () => {
+    const result = listHelper.mostLikes(blogs2)
+    expect(result.name).toBe('Edsger W. Dijkstra')
+    expect(result.likes).toBe(17)
+  })
+  test('It returns empty object when empty list', () => {
+    const result = listHelper.mostLikes([])
+    expect(result).toEqual({})
+  })
+
+})
