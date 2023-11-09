@@ -1,12 +1,12 @@
 const listHelper = require('../utils/list_helpers')
 
-test('dummy returns one', () => {
+test('Dummy returns one', () => {
   const blogs = []
   const result = listHelper.dummy(blogs)
   expect(result).toBe(1)
 })
 
-describe('total likes', () => {
+describe('Total likes', () => {
   test('It returns total likes', () => {
     const blogs = [
       { 'title': 'testi1', 'likes':1 },
@@ -29,5 +29,25 @@ describe('total likes', () => {
     const result = listHelper.totalLikes(blogs)
     expect(result).toBe(0)
   })
-
 })
+
+describe('Most likes', () => {
+  test('It returns which has most likes', () => {
+    const blogs = [
+      { 'title': 'testi1', 'likes':1 },
+      { 'title': 'testi2', 'likes':2 },
+      { 'title': 'testi3', 'likes':3 }
+    ]
+    const result = listHelper.favouriteBlog(blogs)
+    expect(result.title).toBe('testi3')
+  })
+
+  test('It return empty object when empty list', () => {
+    const blogs = [
+    ]
+    const result = listHelper.favouriteBlog(blogs)
+    expect(result).toEqual({})
+  })
+})
+
+
