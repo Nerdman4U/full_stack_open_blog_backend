@@ -1,4 +1,5 @@
 const listHelper = require('../utils/list_helpers')
+const blogs2 = require('../data/blogs_for_test.json')
 
 test('Dummy returns one', () => {
   const blogs = []
@@ -50,4 +51,17 @@ describe('Most likes', () => {
   })
 })
 
+
+describe('Most blogs', () => {
+  test('It returns which has most likes', () => {
+    const result = listHelper.mostBlogs(blogs2)
+    expect(result.name).toBe('Robert C. Martin')
+    expect(result.blogs).toBe(3)
+  })
+  test('It returns empty object when empty list', () => {
+    const result = listHelper.mostBlogs([])
+    expect(result).toEqual({})
+  })
+
+})
 

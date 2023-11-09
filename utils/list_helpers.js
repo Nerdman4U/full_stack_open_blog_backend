@@ -1,4 +1,5 @@
 const logger = require('../utils/logger')
+const lodash = require('lodash')
 
 const dummy = () => {
   return 1
@@ -18,8 +19,20 @@ const favouriteBlog = (blogs) => {
   return blogs.find((item) => item.likes === most)
 }
 
+const mostBlogs = (blogs) => {
+  if (Object.keys(blogs).length < 1) return {}
+  const result = lodash.countBy(blogs, (blog) => { return blog.author })
+  const most = Math.max(...lodash.values(result))
+  const name = lodash.findKey(result, (obj) => {
+    return obj === most
+  })
+  return { name: name, blogs: most }
+}
+
+
 module.exports = {
   dummy,
   totalLikes,
-  favouriteBlog
+  favouriteBlog,
+  mostBlogs
 }
