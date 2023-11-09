@@ -1,13 +1,4 @@
-const config = require('../config')
 const mongoose = require('mongoose')
-
-const password = config.MONGODB_PASSWORD
-
-const url = `mongodb+srv://jonitoyryla2:${password}@yonisthebest.aguxysm.mongodb.net/blogApp?retryWrites=true&w=majority`
-mongoose.set('strictQuery', false)
-mongoose.connect(url)
-  .then(() => {console.log('connected')})
-  .catch((e) => {console.log('error connecting, e:', e)})
 
 const blogSchema = mongoose.Schema({
   title: String,
