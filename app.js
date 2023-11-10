@@ -8,8 +8,8 @@ const config = require('./utils/config')
 const mongoose = require('mongoose')
 
 // Database
-const password = config.MONGODB_PASSWORD
-const url = `mongodb+srv://jonitoyryla2:${password}@yonisthebest.aguxysm.mongodb.net/blogApp?retryWrites=true&w=majority`
+const url = config.MONGODB_URI
+console.log('Connecting to database', url)
 mongoose.set('strictQuery', false)
 mongoose.connect(url)
   .then(() => {console.log('connected')})
