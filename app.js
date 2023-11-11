@@ -5,15 +5,16 @@ const morgan = require('morgan')
 const blogRouter = require('./controllers/blogs')
 const middleware = require('./utils/middleware')
 const config = require('./utils/config')
+const logger = require('./utils/logger')
 const mongoose = require('mongoose')
 
 // Database
 const url = config.MONGODB_URI
-console.log('Connecting to database', url)
+logger.info('Connecting to database', url)
 mongoose.set('strictQuery', false)
 mongoose.connect(url)
-  .then(() => {console.log('connected')})
-  .catch((e) => {console.log('error connecting, e:', e)})
+  .then(() => { logger.info('connected') })
+  .catch((e) => { logger.info('error connecting, e:', e) })
 
 // Middlewaret
 app.use(cors())
