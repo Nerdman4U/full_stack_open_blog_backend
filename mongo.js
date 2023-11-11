@@ -8,7 +8,10 @@ const printHelp = (e) => {
   const sections = [
     {
       header: 'Use MongoDB from commandline.',
-      content: 'Use Get, Post, Delete and Put to operate datebase.'
+      content: 'Use GET, POST, DELETE and PUT to operate datebase.\n\n\
+      GET: Working\n\
+      POST: Working\n\
+      DELETE/PUT: NOT WORKING'
     },
     {
       header: 'Options',

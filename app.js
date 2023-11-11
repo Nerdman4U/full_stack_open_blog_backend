@@ -1,4 +1,5 @@
 const express = require('express')
+require('express-async-errors')
 const app = express()
 const cors = require('cors')
 const morgan = require('morgan')
@@ -10,7 +11,7 @@ const mongoose = require('mongoose')
 
 // Database
 const url = config.MONGODB_URI
-logger.info('Connecting to database', url)
+console.log('Connecting to database', url)
 mongoose.set('strictQuery', false)
 mongoose.connect(url)
   .then(() => { logger.info('connected') })
