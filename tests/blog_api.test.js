@@ -45,7 +45,7 @@ describe('GET', () => {
 
 describe('POST', () => {
   test('It adds blogs', async () => {
-    const item = { title:'title123' }
+    const item = { title:'title5', url:'url5' }
     await api
       .post('/api/blogs')
       .send(item)
@@ -54,8 +54,26 @@ describe('POST', () => {
 
     const blogs = await blogsInDb()
     expect(blogs).toHaveLength(initialItems.length + 1)
-    const contents = blogs.map((blog) => blog.title)
-    expect(contents).toContain('title123')
+    const contents = blogs.map((blog) => blog.title+blog.url).join('')
+    expect(contents).toMatch(/title5/)
+    expect(contents).toMatch(/url5/)
+  })
+
+  test('It responses with status code 400 without title or url', async () => {
+    let item
+    item = { title:'title5' }
+    await api
+      .post('/api/blogs')
+      .send(item)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    item = { url:'url5' }
+    await api
+      .post('/api/blogs')
+      .send(item)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
   })
 
   test('It does not add empty blog', async () => {
@@ -73,7 +91,7 @@ describe('POST', () => {
   })
 
   test('It adds 0 likes if undefined', async () => {
-    const item = { 'title':'testi2' }
+    const item = { 'title':'testi2', url:'url2' }
     await api
       .post('/api/blogs')
       .send(item)
@@ -98,11 +116,10 @@ describe('DELETE', () => {
         console.log(e)
       })
 
-    // const blogsAtEnd = await blogsInDb()
-    // expect(blogsAtEnd).toHaveLength(initialItems.length - 1)
-
-    // const contents = blogsAtEnd.map(item => item.title )
-    // expect(contents).not.toContain(obj.title)
+    const blogsAtEnd = await blogsInDb()
+    expect(blogsAtEnd).toHaveLength(initialItems.length - 1)
+    const contents = blogsAtEnd.map(item => item.title )
+    expect(contents).not.toContain(obj.title)
   },10000)
 })
 
