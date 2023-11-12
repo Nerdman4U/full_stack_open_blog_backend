@@ -10,7 +10,7 @@ const initialItems = [
 const nonExistingId = async () => {
   const blog = new Blog({ title: 'Testaus nimi' })
   await blog.save()
-  await blog.remove()
+  await Blog.findByIdAndDelete(blog.id)
   return blog._id.toString()
 }
 
