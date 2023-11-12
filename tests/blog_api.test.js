@@ -3,7 +3,7 @@ const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
 
-const { initialItems, blogsInDb } = require('../utils/test_helpers')
+const { initialItems, blogsInDb, nonExistingId } = require('./test_helpers')
 const Blog = require('../models/blog')
 
 beforeEach(async() => {
@@ -39,6 +39,13 @@ describe('GET', () => {
   test('It get object with id', async () => {
     const res = await api.get('/api/blogs')
     expect(res.body[0].id).toBeDefined()
+  })
+
+  test('It returns status 400 with wrong id', async () => {
+    const invalidId = await nonExistingId()
+    await api
+      .get(`/api/blogs/${invalidId}`)
+      .expect(404)
   })
 
 })
@@ -123,5 +130,19 @@ describe('DELETE', () => {
   },10000)
 })
 
+describe('PUT', () => {
+  test('It updates item', async () => {
+    const blogsAtStart = await blogsInDb()
+    const obj = blogsAtStart[0]
+    const newJson = { ...obj, likes: 5 }
+    const newObj = await api
+      .put(`/api/blogs/${obj.id}`)
+      .send(newJson)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
 
+    expect(newObj.body.likes).toBe(5)
+    expect(newObj.body.title).toBe('title1')
+  })
+})
 
