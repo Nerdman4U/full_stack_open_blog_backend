@@ -6,16 +6,25 @@ blogRouter.get('/', async (request, response) => {
   response.json(blogs)
 })
 
-blogRouter.post('/', async (request, response) => {
+blogRouter.post('/', async (request, response, next) => {
   const body = request.body
+  let likes
+  if ( body.likes === undefined ) {
+    likes = 0
+  }
+
   const blog = new Blog({
     title: body.title,
     author: body.author,
     url: body.url,
-    likes: body.likes
+    likes: likes
   })
-  const savedItem = await blog.save()
-  response.status(201).json(savedItem)
+  try {
+    const savedItem = await blog.save()
+    response.status(201).json(savedItem)
+  } catch (exception) {
+    next(exception)
+  }
 })
 
 blogRouter.get('/:id', async (req, res) => {
@@ -27,8 +36,13 @@ blogRouter.get('/:id', async (req, res) => {
   }
 })
 
-blogRouter.delete('/:id', async (req, res) => {
-  await Blog.findByIdAndRemove(req.params.id)
+blogRouter.delete('/:id', async (req, res, next) => {
+  try {
+    await Blog.findByIdAndDelete(req.params.id)
+    res.status(204).end()
+  } catch (exception) {
+    next(exception)
+  }
 })
 
 // blogRouter.delete('/:id', async (req, res) => {
