@@ -15,6 +15,7 @@ blogRouter.post('/', async (request, response) => {
   }
   const user = await User.findById(body.userId)
   if (!user) {
+    console.error('No user, id:', body.userId)
     return response.status(400).json({ error: 'user not found' })
   }
 
@@ -40,10 +41,10 @@ blogRouter.post('/', async (request, response) => {
   let blogs = user.blogs || []
   blogs = blogs.concat(savedItem._id)
   user.blogs = blogs
-  const res = await user.save().catch((e) => {
+  await user.save().catch((e) => {
     console.log(e)
   })
-  console.log('res:', res)
+
 })
 
 blogRouter.get('/:id', async (req, res) => {

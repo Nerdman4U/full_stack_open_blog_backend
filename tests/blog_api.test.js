@@ -2,13 +2,20 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
+const bcrypt = require('bcrypt')
 
-const { initialItems, blogsInDb, nonExistingId } = require('./test_helpers')
+const { initialItems, blogsInDb, usersInDb, nonExistingId } = require('./test_helpers')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 beforeEach(async() => {
   await Blog.deleteMany()
   await Blog.insertMany(initialItems)
+
+  await User.deleteMany({})
+  const passwordHash = await bcrypt.hash('password',10)
+  const user = new User({ username:'username1', name:'name1', passwordHash:passwordHash })
+  await user.save()
 })
 
 afterAll(async() => { await mongoose.connection.close() })
@@ -16,7 +23,6 @@ afterAll(async() => { await mongoose.connection.close() })
 describe('GET', () => {
   test('It returns blogs as json', async () => {
     let res
-
     res = await api.get('/api/blogs')
     expect(res.body).toHaveLength(initialItems.length)
 
@@ -52,12 +58,19 @@ describe('GET', () => {
 
 describe('POST', () => {
   test('It adds blogs', async () => {
-    const item = { title:'title5', url:'url5' }
+    const users = await usersInDb()
+    const item = {
+      title: 'title5',
+      url: 'url5',
+      userId: users[0].id
+    }
+
     await api
       .post('/api/blogs')
       .send(item)
       .expect(201)
       .expect('Content-Type', /application\/json/)
+      .catch((e) => { console.log('test POST, e:', e) })
 
     const blogs = await blogsInDb()
     expect(blogs).toHaveLength(initialItems.length + 1)
@@ -98,7 +111,12 @@ describe('POST', () => {
   })
 
   test('It adds 0 likes if undefined', async () => {
-    const item = { 'title':'testi2', url:'url2' }
+    const users = await usersInDb()
+    const item = {
+      'title': 'testi2',
+      'userId': users[0].id,
+      url: 'url2'
+    }
     await api
       .post('/api/blogs')
       .send(item)
