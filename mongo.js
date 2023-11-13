@@ -3,6 +3,7 @@ const logger = require('./utils/logger')
 const mongoose = require('mongoose')
 const commandLineUsage = require('command-line-usage')
 const commandLineArgs = require('command-line-args')
+const readline = require('readline')
 
 const printHelp = (e) => {
   const sections = [
@@ -57,36 +58,38 @@ if ( !options.model ) {
   printHelp()
 }
 
+const readLineAsync = () => {
+  const rl = readline.createInterface({
+    input: process.stdin
+  })
+  return new Promise((resolve) => {
+    rl.prompt()
+    rl.on('line', (line) => {
+      rl.close()
+      resolve(line)
+    })
+  })
+}
+
 // Database
 const con = async () => {
   const url = DB
   console.log('Connecting to database', url)
   mongoose.set('strictQuery', false)
   await mongoose.connect(url)
-    .then(() => {
-      logger.info('connected')
-      doSomething()
-    })
-    .catch((e) => {console.log('error connecting, e:', e)})
-}
-
-const doSomething = async () => {
+  console.log('connected')
 
   const Klass = require(`./models/${options.model}`)
   let obj_json // TODO: could be read from a file.
   if ( method === 'get' ) {
     if ( options.id ) {
-      await Klass.findById(options.id).then(result => {
-        logger.info(result)
-      }).finally(() => {
-        mongoose.connection.close()
-      })
+      const result = await Klass.findById(options.id)
+      logger.info(result)
+      mongoose.connection.close()
     } else  {
-      await Klass.find({}).then(result => {
-        result.forEach(obj => { logger.info(obj )})
-      }).finally(() => {
-        mongoose.connection.close()
-      })
+      const result = Klass.find({})
+      result.forEach(obj => { logger.info(obj )})
+      mongoose.connection.close()
     }
   }
 
@@ -103,14 +106,13 @@ const doSomething = async () => {
 
   } else if ( method === 'delete' ) {
     console.log('Are you sure? Delete all [Y/N] >')
-    process.stdin.on('data', data => {
-      if (data.toString() === 'Y') {
-        //Klass.deleteMany({})
-        // logger.info('done')
-        // mongoose.connection.close()
-        // process.exit(1)
-      }
-    })
+    const line = await readLineAsync()
+    if (line.toString() === 'Y') {
+      await Klass.deleteMany({})
+    }
+    logger.info('done')
+    mongoose.connection.close()
+    // process.exit(1)
 
   } else if ( method === 'put' ) {
     logger.info('Put: Not working yet...')
