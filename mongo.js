@@ -26,7 +26,7 @@ const printHelp = (e) => {
 
 const optionDefinitions = [
   { name: 'model', alias: 'm', type: String,  description: 'Model name, i.e. blog' },
-  { name: 'method', alias: 'e', type: String, description: 'Operation type. Get, post, put, delete.', default: "get"},
+  { name: 'method', alias: 'e', type: String, description: 'Operation type. Get, post, put, delete.', default: 'get' },
   { name: 'id', alias: 'i', type: String, description: 'Identifier used to fetch one model.' },
   { name: 'help', alias: 'h', type: Boolean, description: 'Print this help.' },
   { name: 'db', alias: 'd', type: String, description: 'dev or test' },
@@ -58,54 +58,65 @@ if ( !options.model ) {
 }
 
 // Database
-const url = DB
-console.log('Connecting to database', url)
-mongoose.set('strictQuery', false)
-mongoose.connect(url)
-  .then(() => {console.log('connected')})
-  .catch((e) => {console.log('error connecting, e:', e)})
-
-// Model
-// TODO: Generic
-const Klass = require(`./models/${options.model}`)
-
-let obj_json // TODO: could be read from a file.
-if ( method === 'get' ) {
-  if ( options.id ) {
-    Klass.findById(options.id).then(result => {
-      logger.info(result)
-    }).finally(() => {
-      mongoose.connection.close()
+const con = async () => {
+  const url = DB
+  console.log('Connecting to database', url)
+  mongoose.set('strictQuery', false)
+  await mongoose.connect(url)
+    .then(() => {
+      logger.info('connected')
+      doSomething()
     })
-  } else  {
-    Klass.find({}).then(result => {
-      result.forEach(obj => { logger.info(obj )})
-    }).finally(() => {
-      mongoose.connection.close()
-    })
-
-  }
+    .catch((e) => {console.log('error connecting, e:', e)})
 }
-else if ( method === 'post' ) {
-  if (!options.params) {
-    printHelp()
-  }
-  obj_json = options.params
-  obj_json = JSON.parse(obj_json)
-  const obj = new Klass(obj_json)
 
-  obj.save().then(() => {
+const doSomething = async () => {
+
+  const Klass = require(`./models/${options.model}`)
+  let obj_json // TODO: could be read from a file.
+  if ( method === 'get' ) {
+    if ( options.id ) {
+      await Klass.findById(options.id).then(result => {
+        logger.info(result)
+      }).finally(() => {
+        mongoose.connection.close()
+      })
+    } else  {
+      await Klass.find({}).then(result => {
+        result.forEach(obj => { logger.info(obj )})
+      }).finally(() => {
+        mongoose.connection.close()
+      })
+    }
+  }
+
+  else if ( method === 'post' ) {
+    if (!options.params) {
+      printHelp()
+    }
+    obj_json = options.params
+    obj_json = JSON.parse(obj_json)
+    const obj = new Klass(obj_json)
+    await obj.save()
     logger.info('Saved')
-  }).finally(() => {
     mongoose.connection.close()
-  })
-} else if ( method === 'delete' ) {
-  logger.info('Delete: Not working yet...')
-  mongoose.connection.close()
-} else if ( method === 'put' ) {
-  logger.info('Put: Not working yet...')
-  mongoose.connection.close()
+
+  } else if ( method === 'delete' ) {
+    console.log('Are you sure? Delete all [Y/N] >')
+    process.stdin.on('data', data => {
+      if (data.toString() === 'Y') {
+        //Klass.deleteMany({})
+        // logger.info('done')
+        // mongoose.connection.close()
+        // process.exit(1)
+      }
+    })
+
+  } else if ( method === 'put' ) {
+    logger.info('Put: Not working yet...')
+    mongoose.connection.close()
+  }
+
 }
 
-
-
+con()
