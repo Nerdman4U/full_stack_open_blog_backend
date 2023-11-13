@@ -5,6 +5,7 @@ const cors = require('cors')
 const morgan = require('morgan')
 const blogRouter = require('./controllers/blogs')
 const userRouter = require('./controllers/users')
+const loginRouter = require('./controllers/login')
 const middleware = require('./utils/middleware')
 const config = require('./utils/config')
 const logger = require('./utils/logger')
@@ -23,8 +24,10 @@ app.use(cors())
 app.use(express.json())
 app.use(morgan('combined'))
 
+// Routes
 app.use('/api/blogs', blogRouter)
 app.use('/api/users', userRouter)
+app.use('/api/login', loginRouter)
 
 app.use(middleware.unknown)
 app.use(middleware.errorHandler)

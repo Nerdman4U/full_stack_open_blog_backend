@@ -13,7 +13,7 @@ beforeEach(async() => {
   await Blog.insertMany(initialItems)
 
   await User.deleteMany({})
-  const passwordHash = await bcrypt.hash('password',10)
+  const passwordHash = await bcrypt.hash('password1',10)
   const user = new User({ username:'username1', name:'name1', passwordHash:passwordHash })
   await user.save()
 })
@@ -59,14 +59,22 @@ describe('GET', () => {
 describe('POST', () => {
   test('It adds blogs', async () => {
     const users = await usersInDb()
+    const user = users[0]
+    const res = await api.post('/api/login').send({
+      username: user.username,
+      password: 'password1'
+    }).expect(200)
+    expect(res.body.username).toBe(user.username)
+
     const item = {
       title: 'title5',
       url: 'url5',
-      userId: users[0].id
+      userId: user.id
     }
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${res.body.token}`)
       .send(item)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -80,10 +88,19 @@ describe('POST', () => {
   })
 
   test('It responses with status code 400 without title or url', async () => {
+    const users = await usersInDb()
+    const user = users[0]
+    const res = await api.post('/api/login').send({
+      username: user.username,
+      password: 'password1'
+    }).expect(200)
+    expect(res.body.username).toBe(user.username)
+
     let item
     item = { title:'title5' }
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${res.body.token}`)
       .send(item)
       .expect(400)
       .expect('Content-Type', /application\/json/)
@@ -112,13 +129,21 @@ describe('POST', () => {
 
   test('It adds 0 likes if undefined', async () => {
     const users = await usersInDb()
+    const user = users[0]
+    const res = await api.post('/api/login').send({
+      username: user.username,
+      password: 'password1'
+    }).expect(200)
+    expect(res.body.username).toBe(user.username)
+
     const item = {
       'title': 'testi2',
-      'userId': users[0].id,
+      'userId': user.id,
       url: 'url2'
     }
     await api
       .post('/api/blogs')
+      .set('authorization', `Bearer ${res.body.token}`)
       .send(item)
       .expect(201)
       .expect('Content-Type', /application\/json/)

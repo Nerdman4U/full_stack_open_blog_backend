@@ -59,4 +59,41 @@ describe('POST', () => {
     expect(usersAtEnd).toHaveLength(usersAtStart.length)
   })
 
+  test('it does not create an user with short username', async () => {
+    const usersAtStart = await usersInDb()
+    const user = {
+      username: 'u1',
+      name: 'name1',
+      password: 'password1'
+    }
+    await api
+      .post('/api/users')
+      .send(user)
+      .expect(400)
+      .expect((res) => {
+        expect(res.res.text).toMatch(/short/)
+      })
+
+    const usersAtEnd = await usersInDb()
+    expect(usersAtEnd).toHaveLength(usersAtStart.length)
+  })
+
+  test('it does not create an user with short password', async () => {
+    const usersAtStart = await usersInDb()
+    const user = {
+      username: 'username2',
+      name: 'name2',
+      password: '2'
+    }
+    await api
+      .post('/api/users')
+      .send(user)
+      .expect(400)
+      .expect((res) => {
+        expect(res.res.text).toMatch(/at least 3 characters long/)
+      })
+
+    const usersAtEnd = await usersInDb()
+    expect(usersAtEnd).toHaveLength(usersAtStart.length)
+  })
 })
