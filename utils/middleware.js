@@ -1,4 +1,3 @@
-const jwt = require('jsonwebtoken')
 const logger = require('./logger')
 
 const getTokenFrom = (request, response, next) => {
@@ -10,18 +9,6 @@ const getTokenFrom = (request, response, next) => {
   }
   next()
 }
-
-// const authorizationToken = (request, response, next) => {
-//   if (request.method === 'GET' || request.originalUrl.match(/^\/api\/login/)) {
-//     return next()
-//   }
-//   const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
-//   if (!decodedToken && !decodedToken.id) {
-//     return response.status(401).json({ error: 'token missing or invalid' })
-//   }
-//   request.token = decodedToken
-//   next()
-// }
 
 const errorHandler = (error, request, response, next) => {
   if (error.name === 'CastError') {

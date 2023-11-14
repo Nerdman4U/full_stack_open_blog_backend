@@ -9,18 +9,18 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 const logger = require('../utils/logger')
 
-let user, res
+let loggedInUser, res
 beforeEach(async() => {
   await Blog.deleteMany()
   await Blog.insertMany(initialItems)
 
   await User.deleteMany({})
   const passwordHash = await bcrypt.hash('password1',10)
-  user = new User({ username:'username1', name:'name1', passwordHash:passwordHash })
-  await user.save()
+  loggedInUser = new User({ username:'username1', name:'name1', passwordHash:passwordHash })
+  await loggedInUser.save()
 
   res = await api.post('/api/login').send({
-    username: user.username,
+    username: loggedInUser.username,
     password: 'password1'
   })
 })
@@ -68,7 +68,7 @@ describe('POST', () => {
     const item = {
       title: 'title5',
       url: 'url5',
-      userId: user.id
+      userId: loggedInUser.id
     }
 
     await api
@@ -89,7 +89,7 @@ describe('POST', () => {
     let item
     item = {
       title:'title5',
-      userId: user.id
+      userId: loggedInUser.id
     }
     await api
       .post('/api/blogs')
@@ -100,7 +100,7 @@ describe('POST', () => {
 
     item = {
       url:'url5',
-      userId: user.id
+      userId: loggedInUser.id
     }
     await api
       .post('/api/blogs')
@@ -128,7 +128,7 @@ describe('POST', () => {
   test('It adds 0 likes if undefined', async () => {
     const item = {
       title: 'testi2',
-      userId: user.id,
+      userId: loggedInUser.id,
       url: 'url2'
     }
     await api
@@ -150,9 +150,15 @@ describe('DELETE', () => {
   test('It deletes item', async () => {
     const blogsAtStart = await blogsInDb()
     const obj = blogsAtStart[0]
+
+    // Add logged in user to this blog
+    const thisBlog = await Blog.findById(obj.id)
+    thisBlog.user = loggedInUser.id
+    await thisBlog.save()
+
     await api.delete(`/api/blogs/${obj.id}`)
       .set('Authorization', `Bearer ${res.body.token}`)
-      .send({ userId: user.id })
+      .send({ userId: loggedInUser.id })
       .expect(204)
       .catch((e) => {
         console.log(e)
@@ -162,7 +168,24 @@ describe('DELETE', () => {
     expect(blogsAtEnd).toHaveLength(initialItems.length - 1)
     const contents = blogsAtEnd.map(item => item.title )
     expect(contents).not.toContain(obj.title)
-  },10000)
+  })
+
+  test('It do not delete if wrong owner', async () => {
+    const blogsAtStart = await blogsInDb()
+    const obj = blogsAtStart[0]
+    await api.delete(`/api/blogs/${obj.id}`)
+      .set('Authorization', `Bearer ${res.body.token}`)
+      .send({ userId: loggedInUser.id })
+      .expect(404)
+      .catch((e) => {
+        console.log(e)
+      })
+
+    const blogsAtEnd = await blogsInDb()
+    expect(blogsAtEnd).toHaveLength(initialItems.length)
+    const contents = blogsAtEnd.map(item => item.title )
+    expect(contents).toContain(obj.title)
+  })
 })
 
 describe('PUT', () => {
@@ -173,7 +196,7 @@ describe('PUT', () => {
 
     const newObj = await api
       .put(`/api/blogs/${obj.id}`)
-      .send({ userId: user.id })
+      .send({ userId: loggedInUser.id })
       .set('authorization', `Bearer ${res.body.token}`)
       .send(newJson)
       .expect(200)

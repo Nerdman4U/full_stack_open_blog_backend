@@ -70,6 +70,25 @@ blogRouter.get('/:id', async (req, res) => {
 blogRouter.delete('/:id', async (request, res) => {
   jwt.verify(request.token, process.env.SECRET)
 
+  const body = request.body
+  const user = await loggedInUser(body)
+  if (!user) {
+    logger.error('No user, id:', body.userId)
+    return res.status(400).json({ error: 'user not found' })
+  }
+
+  const blog = await Blog.findById(request.params.id)
+  if (!blog) {
+    return res.status(404).json({ error: 'blog not found' })
+  }
+  if (!blog.user) {
+    return res.status(404).json({ error: 'user not found' })
+  }
+
+  if (blog.user.toString() !== user.id.toString()) {
+    return res.status(401).json({ error: 'unauthorized' })
+  }
+
   await Blog.findByIdAndDelete(request.params.id)
   res.status(204).end()
 })
