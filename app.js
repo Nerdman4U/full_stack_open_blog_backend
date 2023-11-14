@@ -1,5 +1,5 @@
 const express = require('express')
-require('express-async-errors')
+//require('express-async-errors')
 const app = express()
 const cors = require('cors')
 const morgan = require('morgan')
@@ -19,17 +19,18 @@ mongoose.connect(url)
   .then(() => { logger.info('connected') })
   .catch((e) => { logger.info('error connecting, e:', e) })
 
-// Middlewaret
 app.use(cors())
-app.use(express.json())
+app.use(express.json()) // json parser
 app.use(morgan('combined'))
+//app.use(middleware.authorizationToken)
+app.use(middleware.getTokenFrom)
 
 // Routes
 app.use('/api/blogs', blogRouter)
 app.use('/api/users', userRouter)
 app.use('/api/login', loginRouter)
 
-app.use(middleware.unknown)
 app.use(middleware.errorHandler)
+app.use(middleware.unknown)
 module.exports = app
 

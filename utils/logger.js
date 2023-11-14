@@ -8,7 +8,13 @@ const error = (...params) => {
   console.error(...params)
 }
 
+const test = (...params) => {
+  if (process.env.NODE_ENV !== 'test') return
+  console.log(...params)
+}
+
+
 module.exports = {
-  info, error
+  info, error, test
 }
 

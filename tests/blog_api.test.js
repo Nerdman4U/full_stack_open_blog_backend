@@ -7,27 +7,34 @@ const bcrypt = require('bcrypt')
 const { initialItems, blogsInDb, usersInDb, nonExistingId } = require('./test_helpers')
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const logger = require('../utils/logger')
 
+let user, res
 beforeEach(async() => {
   await Blog.deleteMany()
   await Blog.insertMany(initialItems)
 
   await User.deleteMany({})
   const passwordHash = await bcrypt.hash('password1',10)
-  const user = new User({ username:'username1', name:'name1', passwordHash:passwordHash })
+  user = new User({ username:'username1', name:'name1', passwordHash:passwordHash })
   await user.save()
+
+  res = await api.post('/api/login').send({
+    username: user.username,
+    password: 'password1'
+  })
 })
 
 afterAll(async() => { await mongoose.connection.close() })
 
 describe('GET', () => {
   test('It returns blogs as json', async () => {
-    let res
-    res = await api.get('/api/blogs')
-    expect(res.body).toHaveLength(initialItems.length)
+    let blogs
+    blogs = await api.get('/api/blogs')
+    expect(blogs.body).toHaveLength(initialItems.length)
 
-    res = await api.get('/api/blogs')
-    const contents = res.body.map(r => r.title)
+    blogs = await api.get('/api/blogs')
+    const contents = blogs.body.map(r => r.title)
     expect(contents).toContain('title1')
   })
 
@@ -43,8 +50,8 @@ describe('GET', () => {
   })
 
   test('It get object with id', async () => {
-    const res = await api.get('/api/blogs')
-    expect(res.body[0].id).toBeDefined()
+    const blogs = await api.get('/api/blogs')
+    expect(blogs.body[0].id).toBeDefined()
   })
 
   test('It returns status 400 with wrong id', async () => {
@@ -58,14 +65,6 @@ describe('GET', () => {
 
 describe('POST', () => {
   test('It adds blogs', async () => {
-    const users = await usersInDb()
-    const user = users[0]
-    const res = await api.post('/api/login').send({
-      username: user.username,
-      password: 'password1'
-    }).expect(200)
-    expect(res.body.username).toBe(user.username)
-
     const item = {
       title: 'title5',
       url: 'url5',
@@ -78,7 +77,6 @@ describe('POST', () => {
       .send(item)
       .expect(201)
       .expect('Content-Type', /application\/json/)
-      .catch((e) => { console.log('test POST, e:', e) })
 
     const blogs = await blogsInDb()
     expect(blogs).toHaveLength(initialItems.length + 1)
@@ -88,16 +86,11 @@ describe('POST', () => {
   })
 
   test('It responses with status code 400 without title or url', async () => {
-    const users = await usersInDb()
-    const user = users[0]
-    const res = await api.post('/api/login').send({
-      username: user.username,
-      password: 'password1'
-    }).expect(200)
-    expect(res.body.username).toBe(user.username)
-
     let item
-    item = { title:'title5' }
+    item = {
+      title:'title5',
+      userId: user.id
+    }
     await api
       .post('/api/blogs')
       .set('Authorization', `Bearer ${res.body.token}`)
@@ -105,9 +98,13 @@ describe('POST', () => {
       .expect(400)
       .expect('Content-Type', /application\/json/)
 
-    item = { url:'url5' }
+    item = {
+      url:'url5',
+      userId: user.id
+    }
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${res.body.token}`)
       .send(item)
       .expect(400)
       .expect('Content-Type', /application\/json/)
@@ -120,6 +117,7 @@ describe('POST', () => {
     const item = {}
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${res.body.token}`)
       .send(item)
       .expect(400)
 
@@ -128,17 +126,9 @@ describe('POST', () => {
   })
 
   test('It adds 0 likes if undefined', async () => {
-    const users = await usersInDb()
-    const user = users[0]
-    const res = await api.post('/api/login').send({
-      username: user.username,
-      password: 'password1'
-    }).expect(200)
-    expect(res.body.username).toBe(user.username)
-
     const item = {
-      'title': 'testi2',
-      'userId': user.id,
+      title: 'testi2',
+      userId: user.id,
       url: 'url2'
     }
     await api
@@ -161,6 +151,8 @@ describe('DELETE', () => {
     const blogsAtStart = await blogsInDb()
     const obj = blogsAtStart[0]
     await api.delete(`/api/blogs/${obj.id}`)
+      .set('Authorization', `Bearer ${res.body.token}`)
+      .send({ userId: user.id })
       .expect(204)
       .catch((e) => {
         console.log(e)
@@ -178,8 +170,11 @@ describe('PUT', () => {
     const blogsAtStart = await blogsInDb()
     const obj = blogsAtStart[0]
     const newJson = { ...obj, likes: 5 }
+
     const newObj = await api
       .put(`/api/blogs/${obj.id}`)
+      .send({ userId: user.id })
+      .set('authorization', `Bearer ${res.body.token}`)
       .send(newJson)
       .expect(200)
       .expect('Content-Type', /application\/json/)

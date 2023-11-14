@@ -1,32 +1,27 @@
 const blogRouter = require('express').Router()
-const jwt = require('jsonwebtoken')
 const Blog = require('../models/blog')
-const User = require('../models/user')
+const logger = require('../utils/logger')
+const loggedInUser = require('../utils/login')
+const jwt = require('jsonwebtoken')
 
-const getTokenFrom = (request) => {
-  const authorization = request.get('authorization')
-  if (authorization && authorization.startsWith('Bearer ')) {
-    return authorization.replace('Bearer ', '')
-  }
-  return null
-}
-
+/**
+ * Get all blogs
+ */
 blogRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
   response.json(blogs)
 })
 
+/**
+ * Create new blog
+ */
 blogRouter.post('/', async (request, response) => {
+  jwt.verify(request.token, process.env.SECRET)
+
   const body = request.body
-
-  const decodeToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
-  if (!decodeToken.id) {
-    return response.status(401).json({ error: 'token missing or invalid' })
-  }
-
-  const user = await User.findById(decodeToken.id)
+  const user = await loggedInUser(body)
   if (!user) {
-    console.error('No user, id:', body.userId)
+    logger.error('No user, id:', body.userId)
     return response.status(400).json({ error: 'user not found' })
   }
 
@@ -40,12 +35,11 @@ blogRouter.post('/', async (request, response) => {
 
   const blog = new Blog({
     title: body.title,
-    author: body.author,
+    author: user.name,
     url: body.url,
     likes: likes,
     user: user.id
   })
-
   const savedItem = await blog.save()
   response.status(201).json(savedItem)
 
@@ -58,6 +52,9 @@ blogRouter.post('/', async (request, response) => {
 
 })
 
+/**
+ * Get blog
+ */
 blogRouter.get('/:id', async (req, res) => {
   const blog = await Blog.findById(req.params.id)
   if (blog) {
@@ -67,27 +64,31 @@ blogRouter.get('/:id', async (req, res) => {
   }
 })
 
-blogRouter.delete('/:id', async (req, res, next) => {
-  try {
-    await Blog.findByIdAndDelete(req.params.id)
-    res.status(204).end()
-  } catch (exception) {
-    next(exception)
-  }
+/**
+ * Delete blog
+ */
+blogRouter.delete('/:id', async (request, res) => {
+  jwt.verify(request.token, process.env.SECRET)
+
+  await Blog.findByIdAndDelete(request.params.id)
+  res.status(204).end()
 })
 
-// blogRouter.delete('/:id', async (req, res) => {
-//   const blog = await Blog.findById(req.params.id)
-//   if (blog) {
-//     Blog.deleteOne(blog).then(() => {
-//       res.status(204).end()
-//     })
-//   }
-// })
+/**
+ * Update blog
+ */
+blogRouter.put('/:id', async (request, res) => {
+  console.log('request.token:', request.token)
+  jwt.verify(request.token, process.env.SECRET)
 
-blogRouter.put('/:id', async (req, res, next) => {
-  const body = req.body
-  const updatedBlog = await Blog.findByIdAndUpdate(req.body.id, {
+  const body = request.body
+  const user = await loggedInUser(body)
+  if (!user) {
+    logger.error('No user, id:', body.userId)
+    return res.status(400).json({ error: 'user not found' })
+  }
+
+  const updatedBlog = await Blog.findByIdAndUpdate(request.body.id, {
     likes: body.likes
   }, { new: true, runValidators:true, context:'query' })
 
