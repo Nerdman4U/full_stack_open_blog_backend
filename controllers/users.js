@@ -22,7 +22,7 @@ usersRouter.post('/', async (request, response) => {
   jwt.verify(request.token, process.env.SECRET)
 
   const body = request.body
-  const loggedIn = await loggedInUser(body)
+  const loggedIn = request.loggedInUser //await loggedInUser(request)
   if (!loggedIn) {
     logger.error('No user, id:', body.userId)
     return response.status(400).json({ error: 'user not found' })

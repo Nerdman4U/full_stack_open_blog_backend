@@ -16,13 +16,14 @@ beforeEach(async() => {
 
   await User.deleteMany({})
   const passwordHash = await bcrypt.hash('password1',10)
-  loggedInUser = new User({ username:'username1', name:'name1', passwordHash:passwordHash })
-  await loggedInUser.save()
+  const user = new User({ username:'username1', name:'name1', passwordHash:passwordHash })
+  await user.save()
 
   res = await api.post('/api/login').send({
-    username: loggedInUser.username,
+    username: user.username,
     password: 'password1'
   })
+  loggedInUser = user
 })
 
 afterAll(async() => { await mongoose.connection.close() })
@@ -68,7 +69,6 @@ describe('POST', () => {
     const item = {
       title: 'title5',
       url: 'url5',
-      userId: loggedInUser.id
     }
 
     await api
@@ -128,7 +128,6 @@ describe('POST', () => {
   test('It adds 0 likes if undefined', async () => {
     const item = {
       title: 'testi2',
-      userId: loggedInUser.id,
       url: 'url2'
     }
     await api
@@ -137,6 +136,9 @@ describe('POST', () => {
       .send(item)
       .expect(201)
       .expect('Content-Type', /application\/json/)
+      .on('error', (res) => {
+        if (res.response) console.log(res.response.error)
+      })
 
     const blogs2 = await blogsInDb()
     const blog = blogs2.find((item) => {
@@ -160,8 +162,8 @@ describe('DELETE', () => {
       .set('Authorization', `Bearer ${res.body.token}`)
       .send({ userId: loggedInUser.id })
       .expect(204)
-      .catch((e) => {
-        console.log(e)
+      .on('error', (res) => {
+        if (res.response) console.log(res.response.error)
       })
 
     const blogsAtEnd = await blogsInDb()

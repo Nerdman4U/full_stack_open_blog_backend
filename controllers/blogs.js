@@ -19,11 +19,11 @@ blogRouter.post('/', async (request, response) => {
   jwt.verify(request.token, process.env.SECRET)
 
   const body = request.body
-  const user = await loggedInUser(body)
-  if (!user) {
-    logger.error('No user, id:', body.userId)
+  const userJson = request.loggedInUser
+  if (!userJson) {
     return response.status(400).json({ error: 'user not found' })
   }
+  const user = await loggedInUser(request)
 
   let likes = ( body.likes ) ? body.likes : 0
   if (body.title === undefined) {
@@ -71,8 +71,9 @@ blogRouter.delete('/:id', async (request, res) => {
   jwt.verify(request.token, process.env.SECRET)
 
   const body = request.body
-  const user = await loggedInUser(body)
-  if (!user) {
+  //const user = await loggedInUser(body)
+  const userJson = request.loggedInUser
+  if (!userJson) {
     logger.error('No user, id:', body.userId)
     return res.status(400).json({ error: 'user not found' })
   }
@@ -85,7 +86,7 @@ blogRouter.delete('/:id', async (request, res) => {
     return res.status(404).json({ error: 'user not found' })
   }
 
-  if (blog.user.toString() !== user.id.toString()) {
+  if (blog.user.toString() !== userJson.id.toString()) {
     return res.status(401).json({ error: 'unauthorized' })
   }
 
@@ -101,9 +102,8 @@ blogRouter.put('/:id', async (request, res) => {
   jwt.verify(request.token, process.env.SECRET)
 
   const body = request.body
-  const user = await loggedInUser(body)
-  if (!user) {
-    logger.error('No user, id:', body.userId)
+  const userJson = request.loggedInUser
+  if (!userJson) {
     return res.status(400).json({ error: 'user not found' })
   }
 

@@ -31,9 +31,11 @@ describe('POST', () => {
       username: 'username2',
       name: 'name2',
       password: 'password2',
-      userId: loggedInUser.id
     }
 
+    if (!loginRes || !loginRes.body) {
+      throw new Error('Not logged in')
+    }
     await api
       .post('/api/users')
       .set('Authorization', `Bearer ${loginRes.body.token}`)
@@ -56,6 +58,9 @@ describe('POST', () => {
       password: 'password3',
       userId: loggedInUser.id
     }
+    if (!loginRes || !loginRes.body) {
+      throw new Error('Not logged in')
+    }
     await api
       .post('/api/users')
       .set('Authorization', `Bearer ${loginRes.body.token}`)
@@ -77,6 +82,9 @@ describe('POST', () => {
       password: 'password1',
       userId: loggedInUser.id
     }
+    if (!loginRes || !loginRes.body) {
+      throw new Error('Not logged in')
+    }
     await api
       .post('/api/users')
       .send(user)
@@ -96,7 +104,9 @@ describe('POST', () => {
       username: 'username2',
       name: 'name2',
       password: '2',
-      userId: loggedInUser.id
+    }
+    if (!loginRes || !loginRes.body) {
+      throw new Error('Not logged in')
     }
     await api
       .post('/api/users')

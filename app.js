@@ -23,7 +23,8 @@ app.use(cors())
 app.use(express.json()) // json parser
 app.use(morgan('combined'))
 //app.use(middleware.authorizationToken)
-app.use(middleware.getTokenFrom)
+app.use(middleware.tokenFromHeaders)
+app.use(middleware.loggedInUser)
 
 // Routes
 app.use('/api/blogs', blogRouter)
