@@ -125,6 +125,23 @@ describe('POST', () => {
     expect(blogs2).toHaveLength(initialItems.length)
   })
 
+  test('It does not add blog without authorization', async () => {
+    const blogs1 = await blogsInDb()
+    expect(blogs1).toHaveLength(initialItems.length)
+
+    const item = {
+      title: 'title5',
+      url: 'url5'
+    }
+    await api
+      .post('/api/blogs')
+      .send(item)
+      .expect(401)
+
+    const blogs2 = await blogsInDb()
+    expect(blogs2).toHaveLength(initialItems.length)
+  })
+
   test('It adds 0 likes if undefined', async () => {
     const item = {
       title: 'testi2',

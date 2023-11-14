@@ -25,13 +25,13 @@ const errorHandler = (error, request, response, next) => {
   } else if (error.name === 'ValidationError') {
     return response.status(400).send({ error: error.message })
   } else if (error.name === 'JsonWebTokenError') {
-    logger.test(error)
+    //logger.test(error)
     return response.status(400).send({ error: 'invalid token' })
   } else if (error.name === 'Error') {
-    logger.test(error)
+    //logger.test(error)
     return response.status(500).send({ error: 'Internal server error' })
   }
-  console.log(error)
+  //console.log(error)
   next(error)
 }
 

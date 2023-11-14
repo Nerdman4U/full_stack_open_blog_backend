@@ -16,7 +16,11 @@ blogRouter.get('/', async (request, response) => {
  * Create new blog
  */
 blogRouter.post('/', async (request, response) => {
-  jwt.verify(request.token, process.env.SECRET)
+  if (request.token) {
+    jwt.verify(request.token, process.env.SECRET)
+  } else {
+    return response.status(401).json({ error: 'token missing' })
+  }
 
   const body = request.body
   const userJson = request.loggedInUser
