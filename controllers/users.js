@@ -3,7 +3,7 @@ const usersRouter = require('express').Router()
 const User = require('../models/user')
 const logger = require('../utils/logger')
 const jwt = require('jsonwebtoken')
-const loggedInUser = require('../utils/login')
+//const loggedInUser = require('../utils/login')
 
 /**
  * Get all users

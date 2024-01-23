@@ -4,6 +4,17 @@ const logger = require('../utils/logger')
 const loggedInUser = require('../utils/login')
 const jwt = require('jsonwebtoken')
 
+const getTokenFrom = request => {
+  const authorization = request.get('Authorization')
+  console.log('getTokenFrom()', authorization)
+  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+    const token = authorization.replace('Bearer ', '')
+    console.log('getTokenFrom()', token)
+    return token
+  }
+  return null
+}
+
 /**
  * Get all blogs
  */
@@ -16,13 +27,18 @@ blogRouter.get('/', async (request, response) => {
  * Create new blog
  */
 blogRouter.post('/', async (request, response) => {
-  if (request.token) {
-    jwt.verify(request.token, process.env.SECRET)
-  } else {
+  const body = request.body
+  const token = getTokenFrom(request)
+  if (!token) {
+    console.error('No token')
+    return
+  }
+  const decodeToken = jwt.verify(token, process.env.SECRET)
+  console.log('blogRouter()', decodeToken.id)
+  if (!decodeToken.id) {
     return response.status(401).json({ error: 'token missing' })
   }
 
-  const body = request.body
   const userJson = request.loggedInUser
   if (!userJson) {
     return response.status(400).json({ error: 'user not found' })

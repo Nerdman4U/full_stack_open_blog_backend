@@ -6,7 +6,7 @@ const User = require('../models/user')
 loginRouter.post('/', async (request, response) => {
   const body = request.body
   if (!body.username) {
-    console.log('No username')
+    console.log('No username', request.body)
     return response.status(400).json({
       error: 'username missing'
     })
