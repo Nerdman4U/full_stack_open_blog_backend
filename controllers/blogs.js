@@ -20,6 +20,7 @@ const getTokenFrom = request => {
  */
 blogRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
+  console.log('get /, blogs:', blogs)
   response.json(blogs)
 })
 
@@ -54,6 +55,7 @@ blogRouter.post('/', async (request, response) => {
   }
 
   const blog = new Blog({
+    id: body.id,
     title: body.title,
     author: user.name,
     url: body.url,
@@ -111,6 +113,9 @@ blogRouter.delete('/:id', async (request, res) => {
   }
 
   await Blog.findByIdAndDelete(request.params.id)
+  //console.log('delete, Deleted blog:', blog)
+  //const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
+  //console.log('delete, blogs:', blogs)
   res.status(204).end()
 })
 
@@ -126,10 +131,15 @@ blogRouter.put('/:id', async (request, res) => {
   if (!userJson) {
     return res.status(400).json({ error: 'user not found' })
   }
+  const id = request.params.id
+  if (!id) {
+    return res.status(400).json({ error: 'id missing' })
+  }
 
-  const updatedBlog = await Blog.findByIdAndUpdate(request.body.id, {
+  const updatedBlog = await Blog.findByIdAndUpdate(id, {
     likes: body.likes
   }, { new: true, runValidators:true, context:'query' })
+  console.log('put:',updatedBlog)
 
   if (updatedBlog)  {
     res.json(updatedBlog)
